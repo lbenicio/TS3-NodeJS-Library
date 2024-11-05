@@ -184,6 +184,7 @@ export class TeamSpeakQuery extends EventEmitter {
      * @memberof  TeamSpeakQuery
      * @type {object}
      */
+    this.emit("debug", { type: "eventasasfs", data: line })
     this.emit(
       line.substr(6, line.indexOf(" ") - 6),
       Command.parse({ raw: line.substr(line.indexOf(" ") + 1) })[0]

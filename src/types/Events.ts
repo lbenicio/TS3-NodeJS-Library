@@ -40,6 +40,14 @@ export interface TextMessage {
   targetmode: TextMessageTargetMode
 }
 
+export interface ServergroupClient {
+  invokername: string
+  invokeruid: string
+  sgid: string
+  clid: string
+  name: string
+}
+
 export interface ClientMoved {
   client: TeamSpeakClient
   channel: TeamSpeakChannel

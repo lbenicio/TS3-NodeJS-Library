@@ -51,6 +51,9 @@ export interface TeamSpeak {
   on(event: "channelcreate", listener: (event: Event.ChannelCreate) => void): this
   on(event: "channelmoved", listener: (event: Event.ChannelMove) => void): this
   on(event: "channeldelete", listener: (event: Event.ChannelDelete) => void): this
+  on(event: "clientupdated", listener: (event: any) => void): this;
+  on(event: "servergroupclientadded", listener: (event: Event.ServergroupClient) => void): this;
+  on(event: "servergroupclientdeleted", listener: (event: any) => void): this;
 }
 
 export class TeamSpeak extends EventEmitter {
@@ -95,6 +98,8 @@ export class TeamSpeak extends EventEmitter {
     this.query.on("channelcreated", this.evchannelcreated.bind(this))
     this.query.on("clientmoved", this.evclientmoved.bind(this))
     this.query.on("textmessage", this.evtextmessage.bind(this))
+    this.query.on("servergroupclientadded", this.evClientUpdateded.bind(this))
+    this.query.on("servergroupclientdeleted", this.evClientSgRemoved.bind(this))
     this.query.on("ready", this.handleReady.bind(this))
     this.query.on("close", (e?: string) => super.emit("close", e))
     this.query.on("error", (e: Error) => super.emit("error", e))
@@ -283,6 +288,25 @@ export class TeamSpeak extends EventEmitter {
       if (!invoker) throw new EventError(`could not fetch client with id ${event.invokerid}`, "textmessage")
       if (this.ignoreQueryClient(invoker.type)) return
       super.emit("textmessage", { invoker, msg: event.msg, targetmode: event.targetmode })
+    }).catch(e => super.emit("error", e))
+  }
+
+  /**
+   * Gets called when a chat message gets received
+   * @param event the raw teamspeak event
+   */
+  private evClientUpdateded(event: TeamSpeakQuery.ResponseEntry) {
+    this.getClientById(event.clid as string).then(invoker => {
+      if (!invoker) throw new EventError(`could not fetch client with id ${event.invokerid}`, "servergroupclientadded")
+      if (this.ignoreQueryClient(invoker.type)) return
+      super.emit("servergroupclientadded", event)
+    }).catch(e => super.emit("error", e))
+  }
+  private evClientSgRemoved(event: TeamSpeakQuery.ResponseEntry) {
+    this.getClientById(event.clid as string).then(invoker => {
+      if (!invoker) throw new EventError(`could not fetch client with id ${event.invokerid}`, "servergroupclientdeleted")
+      if (this.ignoreQueryClient(invoker.type)) return
+      super.emit("servergroupclientdeleted", event)
     }).catch(e => super.emit("error", e))
   }
 
